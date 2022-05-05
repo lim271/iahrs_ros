@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="iahrs_ros" type="iahrs_ros" name="iahrs">
+    <param name="port" value="/dev/ttyUSB0" />
+    <param name="baud_rate" value="115200" />
+    <param name="comm_recv_timeout" value="0.2" />
+    <param name="loop_rate" value="15" />
+    <param name="publish_mag" value="true" />
+  </node>
+</launch>
