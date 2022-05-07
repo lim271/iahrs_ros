@@ -32,15 +32,27 @@ int main(int argc, char** argv)
 
   sensor_msgs::Imu imu_msg;
   imu_msg.header.frame_id = frame;
+  imu_msg.orientation_covariance[0] =
+  imu_msg.orientation_covariance[4] =
+  imu_msg.orientation_covariance[8] = 0.000004;
+  imu_msg.linear_acceleration_covariance[0] =
+  imu_msg.linear_acceleration_covariance[4] =
+  imu_msg.linear_acceleration_covariance[8] = 0.000230;
+  imu_msg.angular_velocity_covariance[0] =
+  imu_msg.angular_velocity_covariance[4] =
+  imu_msg.angular_velocity_covariance[8] = 0.000262;
 
   sensor_msgs::MagneticField mag_msg;
   mag_msg.header.frame_id = frame;
+  mag_msg.magnetic_field_covariance[0] =
+  mag_msg.magnetic_field_covariance[4] =
+  mag_msg.magnetic_field_covariance[8] = 1.07e-11;
 
   nav_msgs::Odometry odom_msg;
   odom_msg.header.frame_id = frame;
 
-  ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("data", 1000);
-  ros::Publisher mag_pub = nh.advertise<sensor_msgs::MagneticField>("mag", 1000);
+  ros::Publisher imu_pub = nh.advertise<sensor_msgs::Imu>("imu/data", 1000);
+  ros::Publisher mag_pub = nh.advertise<sensor_msgs::MagneticField>("imu/mag", 1000);
 
   ros::Rate loop_rate(hz);
 

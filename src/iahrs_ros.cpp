@@ -87,9 +87,9 @@ bool iAHRSROS::readAngularVelocity(geometry_msgs::Vector3& angular_velocity)
   std::string command = "g\n";
   if (iAHRSROS::_SendRecv(command.c_str(), data, max_data) == max_data)
   {
-    angular_velocity.x = data[0];
-    angular_velocity.y = data[1];
-    angular_velocity.z = data[2];
+    angular_velocity.x = data[0] * M_PI / 180.0;
+    angular_velocity.y = data[1] * M_PI / 180.0;
+    angular_velocity.z = data[2] * M_PI / 180.0;
     return true;
   }
   return false;
