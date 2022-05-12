@@ -37,33 +37,6 @@ bool iAHRSROS::restart()
 }
 
 
-bool iAHRSROS::flashWrite()
-{
-  std::string command = "fw\n";
-  return iAHRSROS::_Send(command.c_str());
-}
-
-
-bool iAHRSROS::setBaudrate(const int& baudrate)
-{
-  return iAHRSROS::setBaudrate232(baudrate) && iAHRSROS::setBaudrateUSB(baudrate);
-}
-
-
-bool iAHRSROS::setBaudrate232(const int& baudrate)
-{
-  std::string command = "b1=" + std::to_string(baudrate) + "\n";
-  return iAHRSROS::_Send(command.c_str());
-}
-
-
-bool iAHRSROS::setBaudrateUSB(const int& baudrate)
-{
-  std::string command = "b2=" + std::to_string(baudrate) + "\n";
-  return iAHRSROS::_Send(command.c_str());
-}
-
-
 bool iAHRSROS::readLinearAcceleration(geometry_msgs::Vector3& linear_acceleration)
 {
   const int max_data = 3;
@@ -105,9 +78,9 @@ bool iAHRSROS::readMagneticField(geometry_msgs::Vector3& magnetic_field)
   {
     return false;
   }
-  magnetic_field.x = data[0];
-  magnetic_field.y = data[1];
-  magnetic_field.z = data[2];
+  magnetic_field.x = data[0] * 0.000001;
+  magnetic_field.y = data[1] * 0.000001;
+  magnetic_field.z = data[2] * 0.000001;
   return true;
 }
 
@@ -215,13 +188,13 @@ bool iAHRSROS::_Send(const char* command)
 
 int iAHRSROS::_SendRecv(const char* command, double* returned_data, int data_length)
 {
-  char temp_buff[128];
-  read(_port_fd, temp_buff, 128);
+  char temp_buff[256];
+  read(_port_fd, temp_buff, 256);
 
   int command_len = strlen(command);
   if (write(_port_fd, command, command_len) < 0) return -1;
 
-  const int buff_size = 128;
+  const int buff_size = 256;
   int  recv_len = 0;
   char recv_buff[buff_size + 1]; // buff size + EOS
 
@@ -236,7 +209,7 @@ int iAHRSROS::_SendRecv(const char* command, double* returned_data, int data_len
     }
     else if (n == 0)
     {
-      usleep(1000); // wait 1ms if no data received.
+      usleep(100); // wait 100us if no data received.
     }
     else if (n > 0)
     {

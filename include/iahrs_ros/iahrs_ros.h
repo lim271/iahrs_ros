@@ -51,18 +51,6 @@ public:
   bool restart();
 
 
-  bool flashWrite();
-
-
-  bool setBaudrate(const int& baudrate);
-
-
-  bool setBaudrate232(const int& baudrate);
-
-
-  bool setBaudrateUSB(const int& baudrate);
-
-
   bool readLinearAcceleration(geometry_msgs::Vector3& linear_acceleration);
 
 
