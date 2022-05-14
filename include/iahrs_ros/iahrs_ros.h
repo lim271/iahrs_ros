@@ -39,7 +39,7 @@ class iAHRSROS
 
 public:
 
-  iAHRSROS(const std::string& port, const unsigned int& baud_rate, const double& comm_recv_timeout);
+  iAHRSROS(const std::string& port, const unsigned int& baud_rate, const unsigned long& comm_recv_timeout);
 
 
   ~iAHRSROS();
@@ -49,6 +49,12 @@ public:
 
 
   bool restart();
+
+
+  bool setSyncMode(const int& hz);
+
+
+  bool setBaudrate(const int& baudrate);
 
 
   bool readLinearAcceleration(geometry_msgs::Vector3& linear_acceleration);
@@ -68,13 +74,19 @@ public:
 
   bool readPosition(geometry_msgs::Point& position);
 
+
+  bool readSyncData(geometry_msgs::Vector3& linear_acceleration, geometry_msgs::Vector3& angular_velocity, geometry_msgs::Vector3& magnetic_field, geometry_msgs::Quaternion& orientation);
+
 private:
 
   std::string _port;
   int _baudrate;
   int _port_fd;
-  double _comm_recv_timeout;
+  //double _comm_recv_timeout;
+  unsigned long _comm_recv_timeout;
   bool _isInitialized;
+  char _buffer[1024];
+  const int _buff_size = 1024;
 
 
   bool _Open();
@@ -83,13 +95,19 @@ private:
   void _Close();
 
 
-  bool _Send(const char* command);
+  int _Send(const char* command);
+
+
+  int _Recv(double* returned_data, int data_length);
 
 
   int _SendRecv(const char* command, double* returned_data, int data_length);
 
 
   int _getBaud(const int& baudrate);
+
+
+  unsigned long _getTickCount();
 
 };
 

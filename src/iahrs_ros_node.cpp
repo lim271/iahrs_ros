@@ -16,13 +16,15 @@ int main(int argc, char** argv)
 
   std::string port, frame;
   int baud_rate, hz;
-  double comm_recv_timeout;
+  int comm_recv_timeout;
+  bool sync_mode;
 
   nh.param("port", port, std::string("/dev/ttyUSB0"));
   nh.param("frame", frame, std::string("iahrs"));
   nh.param("baud_rate", baud_rate, 115200);
-  nh.param("loop_rate", hz, 15);
-  nh.param("comm_recv_timeout", comm_recv_timeout, 0.2);
+  nh.param("loop_rate", hz, 40);
+  nh.param("comm_recv_timeout", comm_recv_timeout, 30);
+  nh.param("sync_mode", sync_mode, false);
 
   geometry_msgs::Vector3 linear_acceleration, angular_velocity, magnetic_field;
   geometry_msgs::Quaternion orientation;
@@ -52,7 +54,7 @@ int main(int argc, char** argv)
 
   iahrs_ros::iAHRSROS sensor(port, baud_rate, comm_recv_timeout);
 
-  if(!sensor.initialize())
+  if (!sensor.initialize())
   {
     ROS_ERROR("Initialization failed.\n");
     return 0;
@@ -62,28 +64,40 @@ int main(int argc, char** argv)
     ROS_INFO("Initialization success.\n");
   }
 
-
-  while(ros::ok())
+  if (sync_mode)
   {
-    ros::Time current_time = ros::Time::now();
+    sensor.setSyncMode(hz);
+  }
 
-    sensor.readLinearAcceleration(linear_acceleration);
-    sensor.readAngularVelocity(angular_velocity);
-    sensor.readOrientation(orientation);
+  while (ros::ok())
+  {
+    if (sync_mode)
+    {
+      sensor.readSyncData(linear_acceleration, angular_velocity, magnetic_field, orientation);
+      imu_msg.header.stamp = mag_msg.header.stamp = ros::Time::now();
+    }
+    else{
+      sensor.readLinearAcceleration(linear_acceleration);
+      sensor.readAngularVelocity(angular_velocity);
+      sensor.readOrientation(orientation);
+      imu_msg.header.stamp = ros::Time::now();
 
-    imu_msg.header.stamp = current_time;
+      sensor.readMagneticField(magnetic_field);
+      mag_msg.header.stamp = ros::Time::now();
+    }
+
     imu_msg.orientation = orientation;
     imu_msg.angular_velocity = angular_velocity;
     imu_msg.linear_acceleration = linear_acceleration;
-    imu_pub.publish(imu_msg);
-
-    sensor.readMagneticField(magnetic_field);
-
-    mag_msg.header.stamp = current_time;
     mag_msg.magnetic_field = magnetic_field;
+
+    imu_pub.publish(imu_msg);
     mag_pub.publish(mag_msg);
 
-    loop_rate.sleep();
+    if (!sync_mode)
+    {
+      loop_rate.sleep();
+    }
   }
 
   return 0;
