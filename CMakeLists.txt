@@ -8,14 +8,16 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   nav_msgs
-  tf
+  tf2
+  tf2_geometry_msgs
+  tf2_ros
 )
 
 # Catkin specific configuration
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp std_msgs geometry_msgs sensor_msgs nav_msgs tf
+  CATKIN_DEPENDS roscpp std_msgs geometry_msgs sensor_msgs nav_msgs tf2 tf2_geometry_msgs tf2_ros
 )
 
 # Build

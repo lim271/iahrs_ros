@@ -3,8 +3,7 @@
 #include <sensor_msgs/Imu.h>
 #include <sensor_msgs/MagneticField.h>
 #include <nav_msgs/Odometry.h>
-#include <tf/transform_broadcaster.h>
-#include <tf/transform_datatypes.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <iahrs_ros/iahrs_ros.h>
 
 
@@ -18,16 +17,22 @@ int main(int argc, char** argv)
   int baud_rate, hz;
   int comm_recv_timeout;
   bool sync_mode;
+  double roll_init, pitch_init, yaw_init;
 
-  nh.param("port", port, std::string("/dev/ttyUSB0"));
+  nh.param("port",  port,  std::string("/dev/ttyUSB0"));
   nh.param("frame", frame, std::string("iahrs"));
   nh.param("baud_rate", baud_rate, 115200);
   nh.param("loop_rate", hz, 40);
   nh.param("comm_recv_timeout", comm_recv_timeout, 30);
   nh.param("sync_mode", sync_mode, false);
+  nh.param("roll_init",  roll_init,  0.0);
+  nh.param("pitch_init", pitch_init, 0.0);
+  nh.param("yaw_init",   yaw_init,   0.0);
 
   geometry_msgs::Vector3 linear_acceleration, angular_velocity, magnetic_field;
   geometry_msgs::Quaternion orientation;
+  tf2::Quaternion quat, quat_init;
+  quat_init.setRPY(roll_init, pitch_init, yaw_init);
 
   sensor_msgs::Imu imu_msg;
   imu_msg.header.frame_id = frame;
@@ -85,8 +90,8 @@ int main(int argc, char** argv)
       sensor.readMagneticField(magnetic_field);
       mag_msg.header.stamp = ros::Time::now();
     }
-
-    imu_msg.orientation = orientation;
+    tf2::fromMsg(orientation, quat);
+    imu_msg.orientation = tf2::toMsg((quat_init * quat).normalize());
     imu_msg.angular_velocity = angular_velocity;
     imu_msg.linear_acceleration = linear_acceleration;
     mag_msg.magnetic_field = magnetic_field;

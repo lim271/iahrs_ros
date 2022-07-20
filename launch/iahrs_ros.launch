@@ -5,5 +5,8 @@
     <param name="comm_recv_timeout" value="30" />
     <param name="loop_rate" value="40" />
     <param name="sync_mode" value="true" />
+    <param name="roll_init" value="0.0" />  <!-- Initial roll angle (rad) -->
+    <param name="pitch_init" value="0.0" />  <!-- Initial pitch angle (rad) -->
+    <param name="yaw_init" value="0.0" />  <!-- Initial yaw angle (rad) -->
   </node>
 </launch>
