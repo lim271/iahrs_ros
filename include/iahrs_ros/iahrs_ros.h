@@ -26,6 +26,7 @@
 #include <geometry_msgs/Vector3.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 
 
@@ -55,6 +56,15 @@ public:
 
 
   bool setBaudrate(const int& baudrate);
+
+
+  void setInitialOrientation(const double& roll, const double& pitch, const double& yaw);
+
+
+  void setInitialOrientation(const geometry_msgs::Quaternion& orientation);
+
+
+  void initialOrientationCallback(const geometry_msgs::Quaternion& msg);
 
 
   bool readLinearAcceleration(geometry_msgs::Vector3& linear_acceleration);
@@ -87,6 +97,7 @@ private:
   bool _isInitialized;
   char _buffer[1024];
   const int _buff_size = 1024;
+  tf2::Quaternion _quat_init;
 
 
   bool _Open();

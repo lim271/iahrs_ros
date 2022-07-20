@@ -24,15 +24,13 @@ int main(int argc, char** argv)
   nh.param("baud_rate", baud_rate, 115200);
   nh.param("loop_rate", hz, 40);
   nh.param("comm_recv_timeout", comm_recv_timeout, 30);
-  nh.param("sync_mode", sync_mode, false);
+  nh.param("sync_mode", sync_mode, true);
   nh.param("roll_init",  roll_init,  0.0);
   nh.param("pitch_init", pitch_init, 0.0);
   nh.param("yaw_init",   yaw_init,   0.0);
 
   geometry_msgs::Vector3 linear_acceleration, angular_velocity, magnetic_field;
   geometry_msgs::Quaternion orientation;
-  tf2::Quaternion quat, quat_init;
-  quat_init.setRPY(roll_init, pitch_init, yaw_init);
 
   sensor_msgs::Imu imu_msg;
   imu_msg.header.frame_id = frame;
@@ -58,6 +56,9 @@ int main(int argc, char** argv)
   ros::Rate loop_rate(hz);
 
   iahrs_ros::iAHRSROS sensor(port, baud_rate, comm_recv_timeout);
+
+  sensor.setInitialOrientation(roll_init, pitch_init, yaw_init);
+  ros::Subscriber orientation_sub = nh.subscribe("orientation_init", 1, &iahrs_ros::iAHRSROS::initialOrientationCallback, &sensor);
 
   if (!sensor.initialize())
   {
@@ -90,8 +91,7 @@ int main(int argc, char** argv)
       sensor.readMagneticField(magnetic_field);
       mag_msg.header.stamp = ros::Time::now();
     }
-    tf2::fromMsg(orientation, quat);
-    imu_msg.orientation = tf2::toMsg((quat_init * quat).normalize());
+    imu_msg.orientation = orientation;
     imu_msg.angular_velocity = angular_velocity;
     imu_msg.linear_acceleration = linear_acceleration;
     mag_msg.magnetic_field = magnetic_field;

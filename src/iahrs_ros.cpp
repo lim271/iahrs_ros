@@ -1,7 +1,6 @@
 #include <iahrs_ros/iahrs_ros.h>
 
 
-
 namespace iahrs_ros
 {
 
@@ -59,12 +58,30 @@ bool iAHRSROS::setSyncMode(const int& hz)
   {
     return false;
   }
-  command = "sd=0x9C\n";
+  command = "sd=0x5C\n";
   if (iAHRSROS::_SendRecv(command.c_str(), data, max_data) < 0)
   {
     return false;
   }
   return true;
+}
+
+
+void iAHRSROS::setInitialOrientation(const double& roll, const double& pitch, const double& yaw)
+{
+  iAHRSROS::_quat_init.setRPY(roll, pitch, yaw);
+}
+
+
+void iAHRSROS::setInitialOrientation(const geometry_msgs::Quaternion& orientation)
+{
+  tf2::fromMsg(orientation, iAHRSROS::_quat_init);
+}
+
+
+void iAHRSROS::initialOrientationCallback(const geometry_msgs::Quaternion& msg)
+{
+  iAHRSROS::setInitialOrientation(msg);
 }
 
 
@@ -75,9 +92,9 @@ bool iAHRSROS::readLinearAcceleration(geometry_msgs::Vector3& linear_acceleratio
   std::string command = "a\n";
   if (iAHRSROS::_SendRecv(command.c_str(), data, max_data) == max_data)
   {
-    linear_acceleration.x = data[0];
-    linear_acceleration.y = data[1];
-    linear_acceleration.z = data[2];
+    linear_acceleration.x = data[0] * 9.80665;
+    linear_acceleration.y = data[1] * 9.80665;
+    linear_acceleration.z = data[2] * 9.80665;
     return true;
   }
   return false;
@@ -134,15 +151,14 @@ bool iAHRSROS::readLinearVelocity(geometry_msgs::Vector3& linear_velocity)
 
 bool iAHRSROS::readOrientation(geometry_msgs::Quaternion& orientation)
 {
-  const int max_data = 4;
+  const int max_data = 3;
   double data[max_data];
-  std::string command = "q\n";
+  std::string command = "e\n";
   if (iAHRSROS::_SendRecv(command.c_str(), data, max_data) == max_data)
   {
-    orientation.w = data[0];
-    orientation.x = data[1];
-    orientation.y = data[2];
-    orientation.z = data[3];
+    tf2::Quaternion quat;
+    quat.setRPY(data[0], data[1], data[2]);
+    orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
     return true;
   }
   return false;
@@ -167,23 +183,22 @@ bool iAHRSROS::readPosition(geometry_msgs::Point& position)
 
 bool iAHRSROS::readSyncData(geometry_msgs::Vector3& linear_acceleration, geometry_msgs::Vector3& angular_velocity, geometry_msgs::Vector3& magnetic_field, geometry_msgs::Quaternion& orientation)
 {
-  const int max_data = 13;
+  const int max_data = 12;
   double data[max_data];
   if (iAHRSROS::_Recv(data, max_data) == max_data)
   {
-    linear_acceleration.x = data[0];
-    linear_acceleration.y = data[1];
-    linear_acceleration.z = data[2];
+    linear_acceleration.x = data[0] * 9.80665;
+    linear_acceleration.y = data[1] * 9.80665;
+    linear_acceleration.z = data[2] * 9.80665;
     angular_velocity.x = data[3] * M_PI / 180.0;
     angular_velocity.y = data[4] * M_PI / 180.0;
     angular_velocity.z = data[5] * M_PI / 180.0;
     magnetic_field.x = data[6] * 0.000001;
     magnetic_field.y = data[7] * 0.000001;
     magnetic_field.z = data[8] * 0.000001;
-    orientation.w = data[9];
-    orientation.x = data[10];
-    orientation.y = data[11];
-    orientation.z = data[12];
+    tf2::Quaternion quat;
+    quat.setRPY(data[9], data[10], data[11]);
+    orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
     return true;
   }
   return false;
