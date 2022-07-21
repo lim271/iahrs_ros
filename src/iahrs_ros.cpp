@@ -157,7 +157,7 @@ bool iAHRSROS::readOrientation(geometry_msgs::Quaternion& orientation)
   if (iAHRSROS::_SendRecv(command.c_str(), data, max_data) == max_data)
   {
     tf2::Quaternion quat;
-    quat.setRPY(data[0], data[1], data[2]);
+    quat.setRPY(data[0] * M_PI / 180.0, data[1] * M_PI / 180.0, data[2] * M_PI / 180.0);
     orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
     return true;
   }
@@ -197,7 +197,7 @@ bool iAHRSROS::readSyncData(geometry_msgs::Vector3& linear_acceleration, geometr
     magnetic_field.y = data[7] * 0.000001;
     magnetic_field.z = data[8] * 0.000001;
     tf2::Quaternion quat;
-    quat.setRPY(data[9], data[10], data[11]);
+    quat.setRPY(data[9] * M_PI / 180.0, data[10] * M_PI / 180.0, data[11] * M_PI / 180.0);
     orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
     return true;
   }
