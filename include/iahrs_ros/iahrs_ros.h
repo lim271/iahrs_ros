@@ -27,6 +27,7 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <iahrs_ros/gp.h>
 
 
 
@@ -64,6 +65,9 @@ public:
   void setInitialOrientation(const geometry_msgs::Quaternion& orientation);
 
 
+  void setCalibration(const bool& calib);
+
+
   void initialOrientationCallback(const geometry_msgs::Quaternion& msg);
 
 
@@ -87,6 +91,9 @@ public:
 
   bool readSyncData(geometry_msgs::Vector3& linear_acceleration, geometry_msgs::Vector3& angular_velocity, geometry_msgs::Vector3& magnetic_field, geometry_msgs::Quaternion& orientation);
 
+
+  GaussianProcess gp;
+
 private:
 
   std::string _port;
@@ -94,7 +101,7 @@ private:
   int _port_fd;
   //double _comm_recv_timeout;
   unsigned long _comm_recv_timeout;
-  bool _isInitialized;
+  bool _isInitialized, _calib;
   char _buffer[1024];
   const int _buff_size = 1024;
   tf2::Quaternion _quat_init;

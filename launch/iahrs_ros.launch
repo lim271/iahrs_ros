@@ -8,5 +8,6 @@
     <param name="roll_init" value="0.0" />  <!-- Initial roll angle (rad) -->
     <param name="pitch_init" value="0.0" />  <!-- Initial pitch angle (rad) -->
     <param name="yaw_init" value="0.0" />  <!-- Initial yaw angle (rad) -->
+    <rosparam param="yaw_remap_x"> [0.55, 0.9, -0.4, 0.4, -0.25, 2]</rosparam>
   </node>
 </launch>

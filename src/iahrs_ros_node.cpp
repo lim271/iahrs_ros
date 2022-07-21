@@ -16,7 +16,7 @@ int main(int argc, char** argv)
   std::string port, frame;
   int baud_rate, hz;
   int comm_recv_timeout;
-  bool sync_mode;
+  bool sync_mode, calib;
   double roll_init, pitch_init, yaw_init;
 
   nh.param("port",  port,  std::string("/dev/ttyUSB0"));
@@ -28,6 +28,7 @@ int main(int argc, char** argv)
   nh.param("roll_init",  roll_init,  0.0);
   nh.param("pitch_init", pitch_init, 0.0);
   nh.param("yaw_init",   yaw_init,   0.0);
+  nh.param("calibration", calib,   true);
 
   geometry_msgs::Vector3 linear_acceleration, angular_velocity, magnetic_field;
   geometry_msgs::Quaternion orientation;
@@ -58,6 +59,7 @@ int main(int argc, char** argv)
   iahrs_ros::iAHRSROS sensor(port, baud_rate, comm_recv_timeout);
 
   sensor.setInitialOrientation(roll_init, pitch_init, yaw_init);
+  sensor.setCalibration(calib);
   ros::Subscriber orientation_sub = nh.subscribe("orientation_init", 1, &iahrs_ros::iAHRSROS::initialOrientationCallback, &sensor);
 
   if (!sensor.initialize())

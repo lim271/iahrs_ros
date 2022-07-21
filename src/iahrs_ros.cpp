@@ -1,6 +1,7 @@
 #include <iahrs_ros/iahrs_ros.h>
 
 
+
 namespace iahrs_ros
 {
 
@@ -76,6 +77,16 @@ void iAHRSROS::setInitialOrientation(const double& roll, const double& pitch, co
 void iAHRSROS::setInitialOrientation(const geometry_msgs::Quaternion& orientation)
 {
   tf2::fromMsg(orientation, iAHRSROS::_quat_init);
+}
+
+
+void iAHRSROS::setCalibration(const bool& calib)
+{
+  if (calib)
+  {
+    iAHRSROS::gp = GaussianProcess();
+  }
+  _calib = calib;
 }
 
 
@@ -157,7 +168,15 @@ bool iAHRSROS::readOrientation(geometry_msgs::Quaternion& orientation)
   if (iAHRSROS::_SendRecv(command.c_str(), data, max_data) == max_data)
   {
     tf2::Quaternion quat;
-    quat.setRPY(data[0] * M_PI / 180.0, data[1] * M_PI / 180.0, data[2] * M_PI / 180.0);
+    if (_calib)
+    {
+      double yaw = iAHRSROS::gp.predict(data[2] * M_PI / 180.0);
+      quat.setRPY(data[0] * M_PI / 180.0, data[1] * M_PI / 180.0, yaw);
+    }
+    else
+    {
+      quat.setRPY(data[0] * M_PI / 180.0, data[1] * M_PI / 180.0, data[2] * M_PI / 180.0);
+    }
     orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
     return true;
   }
@@ -197,7 +216,15 @@ bool iAHRSROS::readSyncData(geometry_msgs::Vector3& linear_acceleration, geometr
     magnetic_field.y = data[7] * 0.000001;
     magnetic_field.z = data[8] * 0.000001;
     tf2::Quaternion quat;
-    quat.setRPY(data[9] * M_PI / 180.0, data[10] * M_PI / 180.0, data[11] * M_PI / 180.0);
+    if (_calib)
+    {
+      double yaw = iAHRSROS::gp.predict(data[11] * M_PI / 180.0);
+      quat.setRPY(data[9] * M_PI / 180.0, data[10] * M_PI / 180.0, yaw);
+    }
+    else
+    {
+      quat.setRPY(data[9] * M_PI / 180.0, data[10] * M_PI / 180.0, data[11] * M_PI / 180.0);
+    }
     orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
     return true;
   }
