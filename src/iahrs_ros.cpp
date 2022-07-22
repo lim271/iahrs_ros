@@ -76,7 +76,8 @@ void iAHRSROS::setInitialOrientation(const double& roll, const double& pitch, co
 
 void iAHRSROS::setInitialOrientation(const geometry_msgs::Quaternion& orientation)
 {
-  tf2::fromMsg(orientation, iAHRSROS::_quat_init);
+  tf2::fromMsg(orientation, this->_quat_init);
+  tf2::fromMsg(orientation, this->_quat_prev);
 }
 
 
@@ -171,13 +172,20 @@ bool iAHRSROS::readOrientation(geometry_msgs::Quaternion& orientation)
     if (_calib)
     {
       double yaw = iAHRSROS::gp.predict(data[2] * M_PI / 180.0);
+      iAHRSROS::_normalize_angle(yaw);
       quat.setRPY(data[0] * M_PI / 180.0, data[1] * M_PI / 180.0, yaw);
     }
     else
     {
       quat.setRPY(data[0] * M_PI / 180.0, data[1] * M_PI / 180.0, data[2] * M_PI / 180.0);
     }
-    orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
+    quat = (this->_quat_init * quat).normalize();
+    if (this->_quat_prev.angleShortestPath(quat) > 0.9 * M_PI)
+    {
+      quat = quat.inverse();
+    }
+    this->_quat_prev = quat;
+    orientation = tf2::toMsg(quat);
     return true;
   }
   return false;
@@ -219,13 +227,20 @@ bool iAHRSROS::readSyncData(geometry_msgs::Vector3& linear_acceleration, geometr
     if (_calib)
     {
       double yaw = iAHRSROS::gp.predict(data[11] * M_PI / 180.0);
+      iAHRSROS::_normalize_angle(yaw);
       quat.setRPY(data[9] * M_PI / 180.0, data[10] * M_PI / 180.0, yaw);
     }
     else
     {
       quat.setRPY(data[9] * M_PI / 180.0, data[10] * M_PI / 180.0, data[11] * M_PI / 180.0);
     }
-    orientation = tf2::toMsg((iAHRSROS::_quat_init * quat).normalize());
+    quat = (this->_quat_init * quat).normalize();
+    if (this->_quat_prev.angleShortestPath(quat) > 0.9 * M_PI)
+    {
+      quat = quat.inverse();
+    }
+    this->_quat_prev = quat;
+    orientation = tf2::toMsg(quat);
     return true;
   }
   return false;
@@ -481,6 +496,22 @@ unsigned long iAHRSROS::_getTickCount()
   clock_gettime(CLOCK_MONOTONIC, &ts);
 
   return ts.tv_sec*1000 + ts.tv_nsec/1000000;
+}
+
+
+void iAHRSROS::_normalize_angle(double& theta)
+{
+  while (fabs(theta) > M_PI)
+  {
+    if (theta > M_PI)
+    {
+      theta -= 2 * M_PI;
+    }
+    else if (theta <= -M_PI)
+    {
+      theta += 2 * M_PI;
+    }
+  }
 }
 
 

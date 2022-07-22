@@ -105,6 +105,7 @@ private:
   char _buffer[1024];
   const int _buff_size = 1024;
   tf2::Quaternion _quat_init;
+  tf2::Quaternion _quat_prev;
 
 
   bool _Open();
@@ -126,6 +127,9 @@ private:
 
 
   unsigned long _getTickCount();
+
+
+  void _normalize_angle(double& theta);
 
 };
 
