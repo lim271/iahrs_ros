@@ -70,14 +70,15 @@ bool iAHRSROS::setSyncMode(const int& hz)
 
 void iAHRSROS::setInitialOrientation(const double& roll, const double& pitch, const double& yaw)
 {
-  iAHRSROS::_quat_init.setRPY(roll, pitch, yaw);
+  this->_quat_init.setRPY(roll, pitch, yaw);
+  this->_quat_prev = this->_quat_init;
 }
 
 
 void iAHRSROS::setInitialOrientation(const geometry_msgs::Quaternion& orientation)
 {
   tf2::fromMsg(orientation, this->_quat_init);
-  tf2::fromMsg(orientation, this->_quat_prev);
+  this->_quat_prev = this->_quat_init;
 }
 
 
